@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>漫读 — 全球漫画阅读器</title>
+<meta name="theme-color" content="#08080c">
+<style>
+/* ============================================================
+   DESIGN SYSTEM
+   ============================================================ */
+:root{
+  --f:'PingFang SC','Noto Sans SC','SF Pro Display',-apple-system,sans-serif;
+  --rxs:6px;--rsm:10px;--rmd:14px;--rlg:20px;--rxl:28px;--rfull:9999px;
+  --navh:60px;--safeb:env(safe-area-inset-bottom,0px);--safet:env(safe-area-inset-top,0px);
+  --ease:cubic-bezier(.25,.1,.25,1);--spring:cubic-bezier(.34,1.56,.64,1);
+}
+[data-theme="dark"]{
+  --bg:#060609;--bg2:#0c0c14;--surface:#12121f;--surface2:#1a1a2e;--surface3:#222240;
+  --text:#f0f0f5;--text2:#a0a0b8;--text3:#5c5c72;
+  --accent:#ff5a36;--accent2:#ff8a6f;--accentsoft:rgba(255,90,54,.12);
+  --green:#34d399;--greensoft:rgba(52,211,153,.12);
+  --gold:#fbbf24;--red:#f87171;
+  --border:rgba(255,255,255,.06);--border2:rgba(255,255,255,.1);
+  --glass:rgba(18,18,31,.8);--glassborder:rgba(255,255,255,.06);
+  --shadow:0 4px 24px rgba(0,0,0,.3);--shadowlg:0 12px 48px rgba(0,0,0,.4);
+}
+[data-theme="light"]{
+  --bg:#f2f2f7;--bg2:#fff;--surface:#fff;--surface2:#f0f0f5;--surface3:#e5e5ed;
+  --text:#1a1a2e;--text2:#6b6b80;--text3:#a0a0b5;
+  --accent:#e8452a;--accent2:#d43d25;--accentsoft:rgba(232,69,42,.08);
+  --green:#10b981;--greensoft:rgba(16,185,129,.08);
+  --gold:#f59e0b;--red:#ef4444;
+  --border:rgba(0,0,0,.06);--border2:rgba(0,0,0,.1);
+  --glass:rgba(255,255,255,.85);--glassborder:rgba(0,0,0,.06);
+  --shadow:0 2px 16px rgba(0,0,0,.06);--shadowlg:0 8px 32px rgba(0,0,0,.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--f);background:var(--bg);color:var(--text);
+  line-height:1.5;-webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;overflow-x:hidden;min-height:100dvh;
+  transition:background .25s ease,color .25s ease;
+}
+button,input{font:inherit;color:inherit;border:none;background:none;outline:none}
+button{touch-action:manipulation;min-height:44px;min-width:44px;cursor:pointer}
+img{display:block;max-width:100%}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--text3);border-radius:3px}
+
+/* App Shell */
+#app{max-width:900px;margin:0 auto;min-height:100dvh;padding-bottom:calc(var(--navh)+var(--safeb)+20px);padding-top:var(--safet)}
+.view{display:none;animation:vin .28s var(--ease)}
+.view.active{display:block}
+@keyframes vin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* Nav */
+.nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;max-width:900px;margin:0 auto;
+  height:calc(var(--navh)+var(--safeb));padding:0 16px var(--safeb);
+  display:flex;align-items:center;justify-content:space-around;
+  background:var(--glass);backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);
+  border-top:.5px solid var(--glassborder);
+}
+.nt{
+  display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 14px;min-height:46px;justify-content:center;
+  color:var(--text3);position:relative;transition:all .2s var(--ease);
+}
+.nt:active{transform:scale(.9)}.nt.active{color:var(--accent)}
+.nt .ic{font-size:22px;line-height:1;transition:transform .2s var(--spring)}
+.nt.active .ic{transform:translateY(-2px) scale(1.05)}
+.nt .lb{font-size:10px;font-weight:600;letter-spacing:.03em}
+.nt.active::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:24px;height:3px;background:var(--accent);border-radius:0 0 3px 3px}
+
+/* Header */
+.hdr{display:flex;align-items:center;justify-content:space-between;height:52px;padding:8px 20px;gap:12px}
+.logo{font-size:22px;font-weight:800;letter-spacing:-.03em;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.ibtn{width:38px;height:38px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .15s}
+.ibtn:active{transform:scale(.9);background:var(--surface3)}
+.sbox{display:flex;align-items:center;gap:10px;height:42px;padding:0 16px;border-radius:var(--rfull);background:var(--surface2);border:1.5px solid transparent;transition:all .2s;cursor:text;flex:1}
+.sbox:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accentsoft)}
+.sbox .si{font-size:15px;color:var(--text3);flex-shrink:0}
+.sbox input{flex:1;height:100%;font-size:14px;background:transparent;color:var(--text);min-width:0}
+.sbox input::placeholder{color:var(--text3)}
+
+/* Hero */
+.hero-s{margin:0 16px 16px}.hero{position:relative;height:210px;border-radius:var(--rlg);overflow:hidden;background:var(--surface)}
+.hero-t{display:flex;height:100%;transition:transform .5s var(--ease)}
+.hero-sl{flex:0 0 100%;position:relative;cursor:pointer}
+.hero-sl img{width:100%;height:100%;object-fit:cover}
+.hero-sl .hov{position:absolute;inset:0;background:linear-gradient(to top,var(--bg) 0%,transparent 40%)}
+.hero-sl .hinf{position:absolute;bottom:0;left:0;right:0;padding:18px}
+.hero-sl .htag{display:inline-block;padding:3px 10px;border-radius:var(--rfull);background:var(--accent);color:#fff;font-size:10px;font-weight:700;letter-spacing:.05em;margin-bottom:5px}
+.hero-sl .htit{font-size:19px;font-weight:800;line-height:1.2;margin-bottom:2px;color:#fff}
+.hero-sl .hsub{font-size:11px;color:rgba(255,255,255,.7)}
+.hero-d{position:absolute;bottom:10px;right:14px;display:flex;gap:5px;z-index:2}
+.hero-d i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.35);transition:all .3s}
+.hero-d i.ac{background:#fff;width:20px;border-radius:3px}
+
+/* Section */
+.sec{margin:0 16px 16px}.sech{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sectit{font-size:16px;font-weight:700;letter-spacing:-.01em}
+.secmore{font-size:12px;color:var(--accent);font-weight:600}
+
+/* Pills */
+.prow{display:flex;gap:7px;overflow-x:auto;padding:2px 0 6px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.prow::-webkit-scrollbar{display:none}
+.pill{flex-shrink:0;height:32px;padding:0 14px;border-radius:var(--rfull);background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:12px;font-weight:550;display:flex;align-items:center;gap:5px;transition:all .2s;white-space:nowrap}
+.pill:active{transform:scale(.94)}.pill.on{background:var(--accentsoft);color:var(--accent);border-color:var(--accent);font-weight:650}
+
+/* Filter */
+.fbar{display:flex;gap:7px;flex-wrap:wrap}
+.fc{height:30px;padding:0 13px;border-radius:var(--rfull);background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:11px;font-weight:550;display:flex;align-items:center;gap:4px;transition:all .2s}
+.fc:active{transform:scale(.94)}.fc.sel{background:var(--accentsoft);color:var(--accent);border-color:var(--accent);font-weight:650}
+
+/* Grid */
+.mgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;padding:0 16px}
+@media(min-width:520px){.mgrid{grid-template-columns:repeat(3,1fr);gap:16px}}
+@media(min-width:800px){.mgrid{grid-template-columns:repeat(4,1fr);gap:16px}}
+.card{cursor:pointer;transition:transform .2s var(--ease);animation:cup .4s var(--ease) both}
+.card:nth-child(1){animation-delay:0s}.card:nth-child(2){animation-delay:.04s}.card:nth-child(3){animation-delay:.08s}.card:nth-child(4){animation-delay:.12s}.card:nth-child(5){animation-delay:.16s}.card:nth-child(6){animation-delay:.2s}
+@keyframes cup{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.card:active{transform:scale(.96)}
+.ccover{position:relative;aspect-ratio:3/4;border-radius:var(--rsm);overflow:hidden;background:var(--surface);box-shadow:var(--shadow);transition:box-shadow .3s;border:1px solid var(--border)}
+.ccover img{width:100%;height:100%;object-fit:cover;transition:transform .4s var(--ease),opacity .3s}
+.ccover img.lz{opacity:0}.ccover img.ld{opacity:1}
+.ccover .cb{position:absolute;top:6px;left:6px;z-index:2;padding:3px 7px;border-radius:var(--rxs);font-size:9px;font-weight:700;letter-spacing:.03em;color:#fff;backdrop-filter:blur(8px)}
+.cb.ht{background:rgba(255,90,54,.8)}.cb.nw{background:rgba(52,211,153,.8)}.cb.end{background:rgba(120,120,140,.7)}
+.ccover .crank{position:absolute;top:6px;right:6px;z-index:2;width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;backdrop-filter:blur(8px)}
+.crank.g{background:linear-gradient(135deg,#fbbf24,#f59e0b)}.crank.s{background:linear-gradient(135deg,#b8c5d6,#8899aa)}.crank.b{background:linear-gradient(135deg,#d4a574,#b8860b)}
+.ccover .cbot{position:absolute;bottom:0;left:0;right:0;padding:20px 8px 7px;background:linear-gradient(transparent,rgba(0,0,0,.75))}
+.ccover .cstars{font-size:10px;color:#fff;font-weight:600}
+.ctitle{margin-top:7px;font-size:13px;font-weight:650;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.csub{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* H-Row */
+.hrow{display:flex;gap:12px;overflow-x:auto;padding:2px 16px 8px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.hrow::-webkit-scrollbar{display:none}
+.hc{flex-shrink:0;width:120px;cursor:pointer;transition:transform .15s}.hc:active{transform:scale(.95)}
+.hc .hcv{width:120px;aspect-ratio:3/4;border-radius:var(--rsm);overflow:hidden;background:var(--surface);box-shadow:var(--shadow);border:1px solid var(--border)}
+.hc .hcv img{width:100%;height:100%;object-fit:cover}
+.hc .hn{margin-top:6px;font-size:12px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-align:center}
+
+/* Detail */
+.dh{position:relative;margin:0 16px 16px;border-radius:var(--rlg);overflow:hidden;aspect-ratio:16/9;background:var(--surface)}
+.dh img{width:100%;height:100%;object-fit:cover}
+.dh .dov{position:absolute;inset:0;background:linear-gradient(to top,var(--bg) 0%,transparent 50%)}
+.dm{padding:0 20px;position:relative;margin-top:-60px;display:flex;gap:14px;align-items:flex-end}
+.dcv{width:126px;aspect-ratio:3/4;border-radius:var(--rmd);object-fit:cover;box-shadow:var(--shadowlg);border:2px solid var(--surface);flex-shrink:0;background:var(--surface)}
+.di{flex:1;min-width:0;padding-bottom:2px}
+.dtit{font-size:19px;font-weight:800;line-height:1.2;margin-bottom:4px}
+.dau{font-size:12px;color:var(--text2);margin-bottom:5px}
+.dst{display:flex;gap:14px;margin-bottom:4px}.dst span{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:3px}.dst b{color:var(--text)}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin:0 20px 12px}
+.tag{padding:4px 10px;border-radius:var(--rxs);font-size:10px;font-weight:600;background:var(--accentsoft);color:var(--accent)}
+.bfav{width:42px;height:42px;border-radius:50%;font-size:20px;display:flex;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow);transition:all .2s var(--spring);flex-shrink:0}
+.bfav:active{transform:scale(.85)}.bfav.liked{color:#ff3b5c;border-color:#ff3b5c;background:rgba(255,59,92,.08);animation:hp .5s var(--spring)}
+@keyframes hp{0%{transform:scale(.75)}50%{transform:scale(1.25)}100%{transform:scale(1)}}
+.desc{padding:0 20px;margin-bottom:14px}
+.dtxt{font-size:13px;color:var(--text2);line-height:1.7;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.dtxt.exp{-webkit-line-clamp:unset}
+.dmtxt{color:var(--accent);font-size:12px;font-weight:600;margin-top:4px;display:inline-block}
+.chs{padding:0 20px}.chh{font-size:15px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.chl{display:flex;flex-direction:column;gap:1px}
+.chi{display:flex;align-items:center;justify-content:space-between;padding:13px 14px;border-radius:var(--rxs);cursor:pointer;transition:all .15s;border:1px solid transparent}
+.chi:hover{background:var(--surface);border-color:var(--border)}.chi:active{transform:scale(.98)}
+.chi .cn{font-size:14px;font-weight:650}.chi .ct{font-size:11px;color:var(--text3);margin-left:6px}.chi .cd{font-size:10px;color:var(--text3);flex-shrink:0}
+.chi.read{opacity:.4}.chi.read .cn{text-decoration:line-through}
+
+/* Reader */
+.reader{background:#000;color:#fff;min-height:100dvh;height:100dvh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.rbar{position:sticky;top:0;left:0;right:0;z-index:50;max-width:900px;margin:0 auto;padding:var(--safet) 16px 10px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(rgba(0,0,0,.9),transparent);transition:opacity .3s,transform .3s}
+.rbar.hide{opacity:0;transform:translateY(-100%);pointer-events:none}
+.rpn{font-size:12px;font-weight:600;padding:5px 14px;border-radius:var(--rfull);background:rgba(255,255,255,.12);backdrop-filter:blur(10px)}
+.rimgs{padding-top:calc(var(--safet)+50px);padding-bottom:100px;display:flex;flex-direction:column;align-items:center}
+.rimgs img{width:100%;max-width:800px;display:block;min-height:60px}
+.rctr{position:sticky;bottom:0;left:0;right:0;z-index:50;margin-top:-60px;text-align:center;display:flex;gap:10px;transition:opacity .3s,transform .3s}
+.rctr.hide{opacity:0;pointer-events:none}
+.rbtn{padding:8px 18px;border-radius:var(--rfull);background:rgba(255,255,255,.12);color:#fff;font-size:12px;font-weight:600;backdrop-filter:blur(10px);transition:all .15s}
+.rbtn:active{background:rgba(255,255,255,.25);transform:scale(.94)}.rbtn:disabled{opacity:.25;pointer-events:none}
+
+/* Lists */
+.mlist{padding:0 16px;display:flex;flex-direction:column;gap:6px}
+.mi{display:flex;gap:12px;padding:10px;border-radius:var(--rsm);cursor:pointer;transition:all .15s;align-items:center;border:1px solid transparent}
+.mi:hover{background:var(--surface);border-color:var(--border)}.mi:active{transform:scale(.98)}
+.mi .mc{width:52px;aspect-ratio:3/4;border-radius:8px;object-fit:cover;background:var(--surface);flex-shrink:0}
+.mi .min{flex:1;min-width:0}.mi .mt{font-size:14px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mi .ms{font-size:11px;color:var(--text3);margin-top:1px}
+.mi .md{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:12px;flex-shrink:0;transition:all .15s}
+.mi .md:hover{color:var(--red);background:rgba(248,113,113,.08)}
+
+/* Profile */
+.pf{padding:0 16px}.pcd{display:flex;align-items:center;gap:14px;padding:18px;border-radius:var(--rmd);background:var(--surface);border:1px solid var(--border);margin-bottom:14px}
+.pav{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--accentsoft),rgba(59,130,246,.08));display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
+.pnm{font-size:16px;font-weight:700}.psub{font-size:11px;color:var(--text3);margin-top:2px}
+.sr{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.sbx{padding:14px 8px;border-radius:var(--rsm);background:var(--surface);text-align:center;border:1px solid var(--border)}
+.sn{font-size:22px;font-weight:800;color:var(--accent)}.sl{font-size:10px;color:var(--text3);margin-top:2px;font-weight:500}
+.slset{background:var(--surface);border-radius:var(--rmd);border:1px solid var(--border);overflow:hidden}
+.srrow{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;min-height:48px;border-bottom:1px solid var(--border);transition:background .15s}
+.srrow:last-child{border-bottom:none}.srrow:active{background:var(--surface2)}
+.srlbl{font-size:14px;font-weight:550}.srdsc{font-size:11px;color:var(--text3);margin-top:1px}
+.sw{width:48px;height:28px;border-radius:14px;background:var(--text3);position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.sw.on{background:var(--accent)}
+.sw::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15);transition:transform .2s}
+.sw.on::after{transform:translateX(20px)}
+
+/* Sheet */
+.sm{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:150;opacity:0;pointer-events:none;transition:opacity .3s}
+.sm.open{opacity:1;pointer-events:auto}
+.sp{position:fixed;bottom:0;left:0;right:0;z-index:151;max-width:900px;margin:0 auto;background:var(--bg2);border-radius:24px 24px 0 0;max-height:65vh;overflow-y:auto;padding:8px 20px calc(20px+var(--safeb));transform:translateY(100%);transition:transform .35s var(--ease);box-shadow:0 -8px 40px rgba(0,0,0,.3)}
+.sp.open{transform:translateY(0)}.sp .handle{width:36px;height:4px;background:var(--text3);border-radius:2px;margin:6px auto 12px}
+.sp .stit{font-size:16px;font-weight:700;margin-bottom:12px}
+.sp .sg{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.sp .sch{height:36px;padding:0 16px;border-radius:var(--rfull);background:var(--surface);border:1px solid var(--border);color:var(--text2);font-size:12px;font-weight:550;transition:all .15s}
+.sp .sch:active{transform:scale(.94)}.sp .sch.pk{background:var(--accentsoft);color:var(--accent);border-color:var(--accent);font-weight:650}
+.sp .sact{display:flex;gap:10px;margin-top:14px}
+.bl{flex:1;height:44px;border-radius:var(--rfull);background:var(--surface);color:var(--text2);font-size:13px;font-weight:600;transition:all .15s}
+.bl:active{transform:scale(.95)}.bf{flex:1;height:44px;border-radius:var(--rfull);background:var(--accent);color:#fff;font-size:13px;font-weight:600;transition:all .15s}
+.bf:active{transform:scale(.95);opacity:.9}
+
+/* Toast */
+.toast{position:fixed;top:calc(var(--safet)+16px);left:50%;transform:translateX(-50%) translateY(-120px);padding:10px 22px;border-radius:var(--rfull);background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:13px;font-weight:550;z-index:200;box-shadow:var(--shadowlg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);transition:transform .4s var(--spring);pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* Skel */
+.skel{background:var(--surface);border-radius:var(--rsm);overflow:hidden;position:relative}
+.skel::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,var(--border),transparent);animation:shimmer 1.4s infinite}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.skelcv{aspect-ratio:3/4}.skeltx{height:14px;margin-top:8px;width:80%}.skeltxs{height:10px;margin-top:6px;width:50%}
+
+/* Empty */
+.emp{display:flex;flex-direction:column;align-items:center;padding:48px 24px;text-align:center;color:var(--text3)}
+.emp .ec{font-size:56px;margin-bottom:14px;opacity:.5}.emp .et{font-size:15px;font-weight:650;color:var(--text2);margin-bottom:4px}.emp .ed{font-size:12px;max-width:220px;margin-bottom:18px}
+.bact{display:inline-flex;align-items:center;gap:5px;height:40px;padding:0 22px;border-radius:var(--rfull);background:var(--accent);color:#fff;font-size:13px;font-weight:650;transition:all .15s}
+.bact:active{transform:scale(.94);opacity:.9}
+
+/* Spinner */
+.spin{width:22px;height:22px;border:2.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:sp 0.7s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+.lr{display:flex;align-items:center;justify-content:center;gap:8px;padding:24px;color:var(--text3);font-size:12px}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+<!-- HOME -->
+<div class="view active" id="pg-home">
+<header class="hdr"><div class="logo">漫读</div><div class="h-actions"><button class="ibtn" onclick="A.togTheme()">🌓</button><button class="sbox" onclick="A.switch('search')" style="width:150px;height:36px;justify-content:flex-start"><span class="si">🔍</span><span style="color:var(--text3);font-size:13px">搜索漫画…</span></button></div></header>
+<div class="hero-s"><div class="hero" id="hero"><div class="hero-t" id="ht"></div><div class="hero-d" id="hd"></div></div></div>
+<div class="sec" id="pillSec"></div>
+<div class="sec"><div class="sech"><div class="sectit">🔥 热门推荐</div></div><div class="hrow" id="trdRow" style="margin-top:8px"></div></div>
+<div class="sec"><div class="sech"><div class="sectit">📚 全部漫画</div><div class="filter-bar fbar" id="fbar"></div></div><div class="mgrid" id="hg"></div><div class="lr" id="hl" style="display:none"><div class="spin"></div> 加载中…</div></div>
+</div>
+
+<!-- SEARCH -->
+<div class="view" id="pg-search">
+<header class="hdr"><div class="sbox" style="flex:1"><span class="si">🔍</span><input type="search" id="sinp" placeholder="搜索漫画…" autocomplete="off"></div><button style="color:var(--accent);font-weight:650;font-size:14px;white-space:nowrap;padding:0 8px" onclick="A.switch('home')">取消</button></header>
+<div id="shints" style="padding:0 20px;margin-bottom:10px"></div><div class="mgrid" id="sg"></div><div class="lr" id="sl" style="display:none"><div class="spin"></div> 搜索中…</div>
+<div class="emp" id="semp" style="display:none"><div class="ec">🔍</div><div class="et">没有找到相关漫画</div><div class="ed">试试其他关键词</div></div>
+</div>
+
+<!-- DETAIL -->
+<div class="view" id="pg-detail">
+<header class="hdr"><button style="font-size:16px;color:var(--text);display:flex;align-items:center;gap:2px;font-weight:600" onclick="history.back()">← 返回</button><button class="bfav" id="bfav" onclick="A.togFav()">🤍</button></header>
+<div class="dh" id="dh"></div><div class="dm" id="dmi"></div><div class="tags" id="dtags"></div>
+<div class="desc"><div class="dtxt" id="ddesc"></div><span class="dmtxt" id="dmore" style="display:none" onclick="A.togDesc()">展开全部 ▼</span></div>
+<div class="chs"><div class="chh">📖 章节列表</div><div class="chl" id="chl"></div></div>
+<div class="lr" id="dl"><div class="spin"></div> 加载中…</div>
+</div>
+
+<!-- READER -->
+<div class="view reader" id="pg-reader">
+<div class="rbar" id="rbar"><button style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.1);color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center" onclick="A.closeReader()">✕</button><div class="rpn" id="rpn">1/1</div><div style="width:38px"></div></div>
+<div class="rimgs" id="rimgs"></div><div class="rctr" id="rctrl"><button class="rbtn" id="rprv" onclick="A.rPrev()">⬅ 上一章</button><button class="rbtn" id="rnxt" onclick="A.rNext()">下一章 ➡</button></div>
+</div>
+
+<!-- BOOKSHELF -->
+<div class="view" id="pg-bookshelf">
+<header class="hdr"><div class="logo">我的书架</div><span style="font-size:16px">📚</span></header>
+<div class="mlist" id="bsl"></div><div class="emp" id="bse" style="display:none"><div class="ec">📚</div><div class="et">书架还是空的</div><div class="ed">去发现页收藏喜欢的漫画吧</div><button class="bact" onclick="A.switch('home')">🏠 去发现页</button></div>
+</div>
+
+<!-- HISTORY -->
+<div class="view" id="pg-history">
+<header class="hdr"><div class="logo">阅读历史</div><button style="font-size:12px;color:var(--red);font-weight:600;padding:0 8px" onclick="A.clearHist()">清空</button></header>
+<div class="mlist" id="histl"></div><div class="emp" id="histe" style="display:none"><div class="ec">📖</div><div class="et">还没有阅读记录</div><div class="ed">开始阅读后会自动记录</div></div>
+</div>
+
+<!-- PROFILE -->
+<div class="view" id="pg-profile">
+<header class="hdr"><div class="logo">我的</div><span style="font-size:16px">👤</span></header>
+<div class="pf"><div class="pcd"><div class="pav" id="pav">📖</div><div><div class="pnm" id="pnm">漫画爱好者</div><div class="psub">数据仅存储在本地</div></div><button class="bact" style="margin-left:auto;flex-shrink:0;height:34px;padding:0 16px;font-size:12px" onclick="A.editName()">编辑</button></div>
+<div class="sr"><div class="sbx"><div class="sn" id="sf">0</div><div class="sl">收藏</div></div><div class="sbx"><div class="sn" id="sh">0</div><div class="sl">历史</div></div><div class="sbx"><div class="sn" id="sr">0</div><div class="sl">已读章节</div></div></div>
+<div class="slset"><div class="srrow" onclick="A.togTheme()"><div><div class="srlbl">🌓 夜间模式</div><div class="srdsc" id="ts">深色主题</div></div><div class="sw on" id="tsw"></div></div>
+<div class="srrow" onclick="A.togProxy()"><div><div class="srlbl">🛰 Vercel代理</div><div class="srdsc" id="ps">已启用（国内加速）</div></div><div class="sw on" id="psw"></div></div>
+<div class="srrow" onclick="A.clearCache()"><div class="srlbl">🗑 清除缓存</div><span style="color:var(--text3)">›</span></div>
+<div class="srrow"><div><div class="srlbl">ℹ️ 关于</div><div class="srdsc">全球91,000+部漫画 · 通过Vercel全球加速</div></div><span style="color:var(--text3);font-size:12px">v2.0</span></div></div></div>
+</div>
+</div>
+
+<!-- Nav -->
+<nav class="nav"><button class="nt active" data-pg="home" onclick="A.switch('home')"><span class="ic">🏠</span><span class="lb">发现</span></button><button class="nt" data-pg="search" onclick="A.switch('search')"><span class="ic">🔍</span><span class="lb">搜索</span></button><button class="nt" data-pg="bookshelf" onclick="A.switch('bookshelf')"><span class="ic">📚</span><span class="lb">书架</span></button><button class="nt" data-pg="history" onclick="A.switch('history')"><span class="ic">⏱</span><span class="lb">历史</span></button><button class="nt" data-pg="profile" onclick="A.switch('profile')"><span class="ic">👤</span><span class="lb">我的</span></button></nav>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+<!-- Sheet -->
+<div class="sm" id="smask" onclick="A.closeSheet()"></div>
+<div class="sp" id="spanel"><div class="handle"></div><div class="stit" id="sttl"></div><div class="sg" id="sgrid"></div><div class="sact"><button class="bl" onclick="A.resetSheet()">重置</button><button class="bf" onclick="A.applySheet()">确定</button></div></div>
+
+<script>
+/* ============================================================
+   PROXY CONFIG — All traffic routes through Vercel serverless
+   ============================================================ */
+// In Vercel: /api/manga/xxx → proxies to api.mangadex.org
+// In Vercel: /api/covers/xxx → proxies to uploads.mangadex.org
+// For local dev: use direct URLs
+const IS_PROXY = !!window.location.hostname.includes('netlify.app') || !!window.location.hostname.includes('vercel.app');
+const API = IS_PROXY ? '/api/manga' : 'https://api.mangadex.org';
+const IMG = IS_PROXY ? '/api' : 'https://uploads.mangadex.org';
+
+const GENRES=[
+  {n:'热血',i:'🔥',id:'e5301a23-ebd9-49dd-a0cb-2add944c7fe9'},
+  {n:'恋爱',i:'💕',id:'423e2eae-a7a2-4a8b-ac03-a8351462d71d'},
+  {n:'奇幻',i:'✨',id:'cdc58593-87dd-415e-bbc0-2ec27bf404cc'},
+  {n:'悬疑',i:'🔍',id:'ee968100-4191-4968-93d3-f82d72be7e46'},
+  {n:'搞笑',i:'😂',id:'4d32cc48-9f00-4cca-9b5a-a839f0764984'},
+  {n:'科幻',i:'🚀',id:'256c8bd9-4904-4360-bf4f-508a76d67183'},
+  {n:'校园',i:'🏫',id:'caaa44a0-9d35-4a4a-8e95-627ef5e7ef4f'},
+  {n:'冒险',i:'⚔️',id:'87cc87cd-a395-47af-b27a-93258283bbc6'},
+  {n:'异世界',i:'🌀',id:'ace04997-f6bd-436e-b261-9095db4a3ab7'},
+  {n:'日常',i:'☕',id:'f4122d1b-1b4e-4e5b-8d8e-8c4a8c2d3e5f'},
+  {n:'恐怖',i:'👻',id:'cdad45f3-7114-468b-9d92-557ec6c2db4a'},
+  {n:'动作',i:'💥',id:'391b0423-d847-456f-aff0-8b0cfc03066b'},
+  {n:'治愈',i:'🌿',id:'eabc5c46-4e6c-4e6b-b7b8-9fc2c1c34b7d'},
+  {n:'竞技',i:'🏆',id:'69947a6b-3c1e-4b3b-b6a8-d8e6a9d0c9e2'},
+];
+const ORIGINS=[{n:'全部',v:''},{n:'🇯🇵日漫',v:'ja'},{n:'🇨🇳国漫',v:'zh'},{n:'🇰🇷韩漫',v:'ko'}];
+const STATUSES=[{n:'全部',v:''},{n:'🟢连载中',v:'ongoing'},{n:'🏁已完结',v:'completed'}];
+const SORTS=[{k:'popular',t:'🔥人气',o:'followedCount'},{k:'rating',t:'⭐评分',o:'rating'},{k:'latest',t:'🕐最新',o:'latestUploadedChapter'}];
+const PROXIES=['https://corsproxy.io/?','https://api.allorigins.win/raw?url='];
+
+const A={
+  pg:'home',cm:null,chs:[],ci:-1,
+  genre:'',origin:'',status:'',sort:'popular',
+  hp:0,sp:0,more:true,loading:false,
+  stype:'',stmp:{},hi:0,ht:null,
+  proxy:localStorage.getItem('md_px')!=='false',pi:0,
+  theme:localStorage.getItem('md_theme')||'dark',
+  name:localStorage.getItem('md_name')||'漫画爱好者',
+  favs:JSON.parse(localStorage.getItem('md_favs')||'[]'),
+  hist:JSON.parse(localStorage.getItem('md_hist')||'[]'),
+  read:JSON.parse(localStorage.getItem('md_read')||'[]'),
+  sh:JSON.parse(localStorage.getItem('md_sh')||'[]'),
+  pos:{},tt:null,
+
+  init(){
+    document.documentElement.setAttribute('data-theme',this.theme);
+    this.renderPills();this.switch('home');
+    window.addEventListener('hashchange',()=>this.route());
+    let t;document.getElementById('sinp').addEventListener('input',()=>{clearTimeout(t);t=setTimeout(()=>this.doSearch(),300)});
+    this.scrollWatch();
+    document.getElementById('pg-reader').addEventListener('click',e=>{if(e.target.tagName==='IMG'){const b=document.getElementById('rbar'),c=document.getElementById('rctrl'),h=b.classList.contains('hide');b.classList.toggle('hide',!h);c.classList.toggle('hide',!h)}});
+  },
+
+  // API — routes through Vercel proxy when deployed
+  async call(path){
+    const url=API+path;
+    try{
+      if(!IS_PROXY&&this.proxy){const p=PROXIES[this.pi];const r=await fetch(p+encodeURIComponent(url),{signal:AbortSignal.timeout(12000)});if(!r.ok)throw Error;return r.json()}
+      const r=await fetch(url,{signal:AbortSignal.timeout(30000)});if(!r.ok)throw Error;return r.json();
+    }catch(e){
+      if(!IS_PROXY&&!this.proxy){this.proxy=true;localStorage.setItem('md_px','true');return this.call(path)}
+      throw e;
+    }
+  },
+
+  coverUrl(mid,fn,size='512'){
+    if(!fn)return'';
+    const d=`${IMG}/covers/${mid}/${fn}.${size}.jpg`;
+    return (!IS_PROXY&&this.proxy)?PROXIES[this.pi]+encodeURIComponent('https://uploads.mangadex.org/covers/'+mid+'/'+fn+'.'+size+'.jpg'):d;
+  },
+
+  getCover(m){for(const r of m.relationships||[]){if(r.type==='cover_art')return r.attributes?.fileName||''}return''},
+
+  // Routing
+  route(){const h=location.hash||'#home';const[r,p]=h.replace('#','').split('/');const m={home:'home',search:'search',manga:'detail',reader:'reader',bookshelf:'bookshelf',history:'history',profile:'profile'};this.switch(m[r]||'home',p)},
+  switch(pg,param){
+    if(this.pg&&this.pg!==pg){const el=document.getElementById('pg-'+this.pg);if(el)this.pos[this.pg]=el.scrollTop||window.scrollY}
+    this.pg=pg;document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));const v=document.getElementById('pg-'+pg);if(v)v.classList.add('active');
+    document.querySelectorAll('.nt').forEach(t=>t.classList.toggle('active',t.dataset.pg===pg||((pg==='detail'||pg==='reader')&&t.dataset.pg==='home')));
+    const hn=['reader','detail'].includes(pg);document.querySelector('.nav').style.display=hn?'none':'';document.body.style.overflow='';
+    switch(pg){case'home':if(!this._hi){this.loadHome();this._hi=true}break;case'search':document.getElementById('sinp')?.focus();this.renderSearchHints();break;case'detail':this.loadDetail(param);break;case'reader':this.loadReader(param);break;case'bookshelf':this.renderBS();break;case'history':this.renderHist();break;case'profile':this.renderPf();break}
+    requestAnimationFrame(()=>{const el=document.getElementById('pg-'+pg);if(el)el.scrollTo(0,this.pos[pg]||0)});
+  },
+  toast(msg){const e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(this.tt);this.tt=setTimeout(()=>e.classList.remove('show'),2200)},
+
+  // Home
+  async loadHome(){this.renderHomeSkel();await Promise.all([this.loadHero(),this.loadTrending(),this.loadGrid()]);this.startHero()},
+  renderHomeSkel(){document.getElementById('hg').innerHTML=Array(6).fill(0).map(()=>'<div><div class="skel skelcv"></div><div class="skel skeltx"></div><div class="skel skeltxs"></div></div>').join('')},
+  async loadHero(){try{const d=await this.call('/manga?limit=8&order[followedCount]=desc&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&hasAvailableChapters=true');const items=d.data||[];document.getElementById('ht').innerHTML=items.map((m,i)=>{const a=m.attributes,t=a.title['zh']||a.title.zh||a.title.en||Object.values(a.title)[0]||'';const c=this.getCover(m),cu=this.coverUrl(m.id,c);return`<div class="hero-sl" onclick="A.openM('${m.id}')"><img src="${cu}" alt="${t}" onerror="this.style.display='none'" loading="${i<2?'eager':'lazy'}"><div class="hov"></div><div class="hinf"><div class="htag">${a.status==='completed'?'已完结':'连载中'}</div><div class="htit">${t}</div><div class="hsub">⭐ ${(a.rating?.average||0).toFixed(1)} · ❤️ ${this.fn(a.followedCount||0)}</div></div></div>`}).join('');document.getElementById('hd').innerHTML=items.map((_,i)=>`<i class="${i===0?'ac':''}"></i>`).join('')}catch(e){}},
+  startHero(){clearInterval(this.ht);this.hi=0;const s=document.querySelectorAll('.hero-sl'),d=document.querySelectorAll('#hd i');if(s.length<2)return;this.ht=setInterval(()=>{this.hi=(this.hi+1)%s.length;document.getElementById('ht').style.transform=`translateX(-${this.hi*100}%)`;d.forEach((d,i)=>d.classList.toggle('ac',i===this.hi))},4000)},
+  async loadTrending(){try{const d=await this.call('/manga?limit=8&order[rating]=desc&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&hasAvailableChapters=true&availableTranslatedLanguage[]=zh');document.getElementById('trdRow').innerHTML=(d.data||[]).map(m=>{const a=m.attributes,t=a.title['zh']||a.title.zh||a.title.en||Object.values(a.title)[0]||'';const c=this.getCover(m),cu=this.coverUrl(m.id,c,'256');return`<div class="hc" onclick="A.openM('${m.id}')"><div class="hcv"><img src="${cu}" alt="${t}" loading="lazy" onerror="this.parentElement.style.background='var(--surface)'"></div><div class="hn">${t}</div></div>`}).join('')}catch(e){}},
+  async loadGrid(){if(this.loading||!this.more)return;this.loading=true;document.getElementById('hl').style.display='flex';try{const p=new URLSearchParams();p.set('limit','24');p.set('offset',String(this.hp*24));p.set('includes[]','cover_art');p.set('contentRating[]','safe');p.set('contentRating[]','suggestive');p.set('hasAvailableChapters','true');p.set('availableTranslatedLanguage[]','zh');const s=SORTS.find(s=>s.k===this.sort);if(s)p.set('order['+s.o+']','desc');if(this.genre)p.set('includedTags[]',this.genre);if(this.origin)p.set('originalLanguage[]',this.origin);if(this.status)p.set('status[]',this.status);const d=await this.call('/manga?'+p.toString());const items=d.data||[];if(items.length<24)this.more=false;if(this.hp===0)document.getElementById('hg').innerHTML='';this.renderCards(items,'hg');this.hp++}catch(e){if(this.hp===0)document.getElementById('hg').innerHTML='<div class="emp"><div class="ec">🌐</div><div class="et">网络连接失败</div><div class="ed">请确认Vercel代理已开启</div><button class="bact" onclick="A.loadGrid()">🔄 重试</button></div>'}this.loading=false;document.getElementById('hl').style.display='none'},
+  renderCards(items,cid){const el=document.getElementById(cid);const rn=this.sort==='popular'&&this.hp===1;el.innerHTML+=items.map((m,i)=>{const a=m.attributes,t=a.title['zh']||a.title.zh||a.title.en||Object.values(a.title)[0]||'';const c=this.getCover(m),cu=this.coverUrl(m.id,c,'256');let bd='';if(a.year>=2025)bd='<span class="cb nw">新作</span>';if(a.status==='completed')bd='<span class="cb end">完结</span>';let rk='';if(rn&&i<3){const r=['g','s','b'];rk=`<div class="crank ${r[i]}">${i+1}</div>`}return`<div class="card" onclick="A.openM('${m.id}')"><div class="ccover">${rk}${bd}<img src="${cu}" alt="${t}" loading="lazy" class="lz" onload="this.classList.add('ld')" onerror="this.style.display='none';this.parentElement.style.background='var(--surface)'"><div class="cbot"><div class="cstars">⭐ ${(a.rating?.average||0).toFixed(1)} · ❤️ ${this.fn(a.followedCount||0)}</div></div></div><div class="ctitle">${t}</div><div class="csub">${a.year||''} · ${a.status==='completed'?'已完结':'连载中'}</div></div>`}).join('')},
+
+  // Pills & Filter
+  renderPills(){document.getElementById('pillSec').innerHTML=`<div class="sech"><div class="sectit">📂 分类浏览</div></div><div class="prow">${GENRES.map(g=>`<button class="pill${this.genre===g.id?' on':''}" onclick="A.togGenre('${g.id}',this)">${g.i} ${g.n}</button>`).join('')}</div>`},
+  togGenre(id,el){this.genre=this.genre===id?'':id;document.querySelectorAll('#pillSec .pill').forEach(p=>p.classList.toggle('on',false));if(this.genre)el.classList.add('on');this.hp=0;this.more=true;this.loadGrid()},
+  renderFBar(){document.getElementById('fbar').innerHTML=`<button class="fc" onclick="A.openSheet('origin')">🌐 ${this.origin?ORIGINS.find(f=>f.v===this.origin)?.n||'已选':'来源'}</button><button class="fc" onclick="A.openSheet('status')">📌 ${this.status?STATUSES.find(f=>f.v===this.status)?.n||'已选':'状态'}</button>${SORTS.map(s=>`<button class="fc${this.sort===s.k?' sel':''}" onclick="A.setSort('${s.k}',this)">${s.t}</button>`).join('')}`},
+  setSort(k,el){this.sort=k;document.querySelectorAll('#fbar .fc').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');this.hp=0;this.more=true;this.loadGrid()},
+
+  // Sheet
+  openSheet(t){this.stype=t;this.stmp={origin:this.origin,status:this.status};const items=t==='origin'?ORIGINS:STATUSES,cur=t==='origin'?this.origin:this.status;document.getElementById('sttl').textContent=t==='origin'?'🌐 选择来源':'📌 选择状态';document.getElementById('sgrid').innerHTML=items.map(o=>`<button class="sch${o.v===cur?' pk':''}" data-v="${o.v}" onclick="A.pickS(this,'${o.v}')">${o.n}</button>`).join('');document.getElementById('smask').classList.add('open');document.getElementById('spanel').classList.add('open')},
+  closeSheet(){document.getElementById('smask').classList.remove('open');document.getElementById('spanel').classList.remove('open')},
+  pickS(el,v){document.querySelectorAll('#sgrid .sch').forEach(c=>c.classList.remove('pk'));el.classList.add('pk');this.stmp[this.stype]=v},
+  resetSheet(){this.stmp[this.stype]='';document.querySelectorAll('#sgrid .sch').forEach(c=>c.classList.toggle('pk',c.dataset.v===''))},
+  applySheet(){if(this.stype==='origin')this.origin=this.stmp.origin;if(this.stype==='status')this.status=this.stmp.status;this.closeSheet();this.renderFBar();this.hp=0;this.more=true;this.loadGrid()},
+
+  // Search
+  renderSearchHints(){const e=document.getElementById('shints'),l=this.sh;if(!l.length){e.innerHTML='';return}e.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:11px;color:var(--text3)">最近搜索</span><button style="font-size:11px;color:var(--accent);font-weight:600" onclick="A.sh=[];localStorage.removeItem('md_sh');A.renderSearchHints()">清空</button></div><div class="prow">${l.map(q=>`<button class="pill" onclick="document.getElementById('sinp').value='${q.replace(/'/g,"\\'")}';A.doSearch()">${q}</button>`).join('')}</div>`},
+  async doSearch(ap=false){if(this.loading)return;if(!ap){this.sp=0;document.getElementById('sg').innerHTML='';document.getElementById('shints').innerHTML='';document.getElementById('semp').style.display='none'}const q=document.getElementById('sinp').value.trim();if(!q){this.renderSearchHints();document.getElementById('sg').innerHTML='';return}this.loading=true;document.getElementById('sl').style.display='flex';this.sh=this.sh.filter(s=>s!==q);this.sh.unshift(q);if(this.sh.length>15)this.sh.length=15;localStorage.setItem('md_sh',JSON.stringify(this.sh));try{const p=new URLSearchParams();p.set('title',q);p.set('limit','24');p.set('offset',String(this.sp*24));p.set('includes[]','cover_art');p.set('contentRating[]','safe');p.set('contentRating[]','suggestive');p.set('order[relevance]','desc');p.set('availableTranslatedLanguage[]','zh');const d=await this.call('/manga?'+p.toString());let items=d.data||[];if(items.length<8&&this.sp===0){try{const gql=JSON.stringify({query:'query($q:String){Page(perPage:10){media(search:$q,type:MANGA){title{english romaji}}}}',variables:{q:q}});const ar=await fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json'},body:gql});const aj=await ar.json();const titles=((aj.data||{}).Page||{}).media||[];for(const m of titles){const en=m.title.english||m.title.romaji;if(en){const p2=new URLSearchParams();p2.set('title',en);p2.set('limit','5');p2.set('includes[]','cover_art');p2.set('contentRating[]','safe');p2.set('contentRating[]','suggestive');p2.set('order[relevance]','desc');try{const d2=await this.call('/manga?'+p2.toString());for(const m2 of(d2.data||[])){if(!items.find(i=>i.id===m2.id)){items.push(m2)}}if(items.length>=20)break}catch(e){}}}}catch(e){}}this.renderCards(items,'sg');this.sp++;if(items.length===0&&this.sp===1)document.getElementById('semp').style.display='flex'}catch(e){document.getElementById('semp').style.display='flex'}this.loading=false;document.getElementById('sl').style.display='none'},
+
+  // Detail
+  openM(id){location.hash='#manga/'+id},
+  async loadDetail(id){if(!id)return;document.getElementById('dl').style.display='flex';document.getElementById('chl').innerHTML='';try{const[md,fd]=await Promise.all([this.call('/manga/'+id+'?includes[]=cover_art&includes[]=author&includes[]=artist'),this.call('/manga/'+id+'/feed?limit=200&translatedLanguage[]=zh&order[chapter]=desc')]);const m=md.data;if(!m)throw Error;const a=m.attributes,t=a.title['zh']||a.title.zh||a.title.en||Object.values(a.title)[0]||'';const c=this.getCover(m),cu=this.coverUrl(m.id,c);let au='';for(const r of m.relationships||[]){if(r.type==='author'){au=r.attributes?.name||'';break}}this.cm={id:m.id,title:t,cover:cu,author:au,desc:a.description?.zh||a.description?.['zh']||a.description?.en||'',status:a.status,year:a.year,rating:(a.rating?.average||0).toFixed(1),followed:this.fn(a.followedCount||0),tags:a.tags||[]};document.getElementById('dh').innerHTML=`<img src="${cu}" alt="${t}" onerror="this.style.display='none';this.parentElement.style.background='var(--surface)'"><div class="dov"></div>`;document.getElementById('dmi').innerHTML=`<img class="dcv" src="${cu}" alt="${t}" onerror="this.style.background='var(--surface)'"><div class="di"><div class="dtit">${t}</div><div class="dau">${au||'未知作者'} · ${a.year||''}</div><div class="dst"><span>⭐ <b>${this.cm.rating}</b></span><span>❤️ <b>${this.cm.followed}</b></span><span>${a.status==='completed'?'🏁已完结':'🟢连载中'}</span></div></div>`;document.getElementById('dtags').innerHTML=(a.tags||[]).slice(0,12).map(t=>`<span class="tag">${t.attributes?.name?.zh||t.attributes?.name?.en||''}</span>`).join('');const desc=this.cm.desc;document.getElementById('ddesc').textContent=desc||'暂无简介';document.getElementById('dmore').style.display=desc&&desc.length>200?'inline-block':'none';document.getElementById('ddesc').classList.remove('exp');let chs=(fd.data||[]).filter(c=>c.attributes.translatedLanguage==='zh'||c.attributes.translatedLanguage==='zh');if(!chs.length)chs=fd.data||[];this.chs=chs;document.getElementById('chl').innerHTML=chs.length?chs.map(c=>{const ca=c.attributes,num=ca.chapter||'番外',title=ca.title||'',rd=this.read.includes(c.id);return`<div class="chi${rd?' read':''}" onclick="A.openRd('${c.id}',${chs.indexOf(c)})"><div><span class="cn">第${num}话</span>${title?`<span class="ct">${title}</span>`:''}</div><span class="cd">${rd?'✓':'📖'}</span></div>`}).join(''):'<div class="emp" style="padding:24px"><div class="ec">📭</div><div class="et">暂无可用章节</div></div>';this.updFav();document.getElementById('dl').style.display='none'}catch(e){document.getElementById('chl').innerHTML='<div class="emp" style="padding:24px"><div class="ec">🌐</div><div class="et">加载失败</div><button class="bact" onclick="A.loadDetail(\''+id+'\')">🔄 重试</button></div>'}},
+  togFav(){const m=this.cm;if(!m)return;const idx=this.favs.findIndex(f=>f.id===m.id);if(idx>=0){this.favs.splice(idx,1);this.toast('已取消收藏')}else{this.favs.unshift({id:m.id,title:m.title,cover:m.cover,author:m.author,added:Date.now()});this.toast('💖 已加入书架')}localStorage.setItem('md_favs',JSON.stringify(this.favs));this.updFav()},
+  updFav(){const b=document.getElementById('bfav');if(!b||!this.cm)return;const l=this.favs.some(f=>f.id===this.cm.id);b.textContent=l?'❤️':'🤍';b.classList.toggle('liked',l)},
+  togDesc(){const e=document.getElementById('ddesc'),m=document.getElementById('dmore');e.classList.toggle('exp');m.textContent=e.classList.contains('exp')?'收起 ▲':'展开全部 ▼'},
+
+  // Reader
+  openRd(cid,idx){this.ci=idx;location.hash='#reader/'+cid},
+  async loadReader(cid){if(!cid)return;document.getElementById('rimgs').innerHTML='<div class="lr" style="padding-top:100px;color:#fff"><div class="spin"></div> 加载中…</div>';document.getElementById('rbar').classList.remove('hide');document.getElementById('rctrl').classList.remove('hide');try{const d=await this.call('/at-home/server/'+cid);const{baseUrl,chapter}=d,hash=chapter.hash,pages=chapter.dataSaver||chapter.data||[];const imgBase=(chapter.dataSaver?baseUrl+'/data-saver':baseUrl+'/data');document.getElementById('rimgs').innerHTML=pages.map((pg,i)=>{const du=imgBase+'/'+hash+'/'+pg;const url=imgBase+'/'+hash+'/'+pg;return`<img src="${url}" alt="第${i+1}页" loading="${i<3?'eager':'lazy'}" onerror="this.style.background='#1a1a1a';this.style.minHeight='100px'" style="min-height:60px">`}).join('');document.getElementById('rpn').textContent=`1 / ${pages.length}`;document.getElementById('rprv').disabled=this.ci<=0;document.getElementById('rnxt').disabled=this.ci>=this.chs.length-1;this.read.push(cid);if(this.read.length>500)this.read=this.read.slice(-300);localStorage.setItem('md_read',JSON.stringify(this.read));const ch=this.chs[this.ci];if(ch&&this.cm){this.hist=this.hist.filter(h=>h.mangaId!==this.cm.id);this.hist.unshift({mangaId:this.cm.id,title:this.cm.title,cover:this.cm.cover,chNum:ch.attributes?.chapter,chTitle:ch.attributes?.title,readAt:Date.now()});if(this.hist.length>200)this.hist.length=200;localStorage.setItem('md_hist',JSON.stringify(this.hist))}const rv=document.getElementById('pg-reader');let pt;rv.addEventListener('scroll',()=>{clearTimeout(pt);pt=setTimeout(()=>{const imgs=document.querySelectorAll('#rimgs img');let cp=1;imgs.forEach((img,i)=>{if(img.getBoundingClientRect().top<window.innerHeight*.3)cp=i+1});document.getElementById('rpn').textContent=`${cp} / ${imgs.length}`},100)},{passive:true});requestAnimationFrame(()=>rv.scrollTo(0,0))}catch(e){document.getElementById('rimgs').innerHTML='<div class="lr" style="padding-top:100px;color:#fff"><div class="ec" style="font-size:48px">🌐</div><div>加载失败</div><button class="bact" onclick="A.loadReader(\''+cid+'\')">🔄 重试</button></div>'}},
+  rPrev(){if(this.ci>0)this.openRd(this.chs[this.ci-1].id,this.ci-1)},
+  rNext(){if(this.ci<this.chs.length-1)this.openRd(this.chs[this.ci+1].id,this.ci+1)},
+  closeReader(){history.back()},
+
+  // Bookshelf
+  renderBS(){const e=document.getElementById('bsl'),em=document.getElementById('bse');if(!this.favs.length){e.innerHTML='';em.style.display='flex';return}em.style.display='none';e.innerHTML=this.favs.map(f=>`<div class="mi" onclick="A.openM('${f.id}')"><img class="mc" src="${f.cover}" alt="${f.title}" loading="lazy" onerror="this.style.background='var(--surface)'"><div class="min"><div class="mt">${f.title}</div><div class="ms">${f.author||''} · ${this.timeAgo(f.added)}</div></div><div class="md" onclick="event.stopPropagation();A.rmFav('${f.id}')">✕</div></div>`).join('')},
+  rmFav(id){this.favs=this.favs.filter(f=>f.id!==id);localStorage.setItem('md_favs',JSON.stringify(this.favs));this.renderBS();this.toast('已移除')},
+
+  // History
+  renderHist(){const e=document.getElementById('histl'),em=document.getElementById('histe');if(!this.hist.length){e.innerHTML='';em.style.display='flex';return}em.style.display='none';e.innerHTML=this.hist.map(h=>`<div class="mi" onclick="A.openM('${h.mangaId}')"><img class="mc" src="${h.cover}" alt="${h.title}" loading="lazy" onerror="this.style.background='var(--surface)'"><div class="min"><div class="mt">${h.title}</div><div class="ms">第${h.chNum||'?'}话 · ${this.timeAgo(h.readAt)}</div></div><div class="md" onclick="event.stopPropagation();A.rmHist('${h.mangaId}')">✕</div></div>`).join('')},
+  rmHist(mid){this.hist=this.hist.filter(h=>h.mangaId!==mid);localStorage.setItem('md_hist',JSON.stringify(this.hist));this.renderHist()},
+  clearHist(){if(confirm('确定清空所有阅读历史？')){this.hist=[];localStorage.setItem('md_hist','[]');this.renderHist();this.toast('已清空')}},
+
+  // Profile
+  renderPf(){document.getElementById('pnm').textContent=this.name;document.getElementById('sf').textContent=this.favs.length;document.getElementById('sh').textContent=this.hist.length;document.getElementById('sr').textContent=this.read.length;this.updThemeUI();this.updProxyUI()},
+  editName(){const n=prompt('输入昵称：',this.name);if(n&&n.trim()){this.name=n.trim();localStorage.setItem('md_name',this.name);document.getElementById('pnm').textContent=this.name;this.toast('昵称已更新')}},
+
+  // Theme
+  togTheme(){this.theme=this.theme==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',this.theme);localStorage.setItem('md_theme',this.theme);this.updThemeUI();this.toast(this.theme==='dark'?'🌙 深色模式':'☀️ 浅色模式')},
+  updThemeUI(){const t=document.getElementById('tsw'),s=document.getElementById('ts');if(t)t.classList.toggle('on',this.theme==='dark');if(s)s.textContent=this.theme==='dark'?'深色主题':'浅色主题'},
+
+  // Proxy
+  togProxy(){this.proxy=!this.proxy;localStorage.setItem('md_px',String(this.proxy));this.updProxyUI();this._hi=false;this.toast(this.proxy?'🛰 代理已开启':'🌐 直连模式');if(this.pg==='home'){this.loadHome();this._hi=true}},
+  updProxyUI(){const t=document.getElementById('psw'),s=document.getElementById('ps');if(t)t.classList.toggle('on',this.proxy);if(s)s.textContent=this.proxy?'已开启 · Vercel全球加速':'关闭'},
+
+  // Cache
+  clearCache(){if(confirm('确定清除所有数据？')){localStorage.clear();this.favs=[];this.hist=[];this.read=[];this.sh=[];this.name='漫画爱好者';this.theme='dark';this.proxy=true;document.documentElement.setAttribute('data-theme','dark');this.renderBS();this.renderHist();this.renderPf();this.toast('已清除全部数据')}},
+
+  // Scroll
+  scrollWatch(){let t=false;window.addEventListener('scroll',()=>{if(t)return;t=true;requestAnimationFrame(()=>{if(this.pg==='home'&&window.innerHeight+window.scrollY>=document.body.offsetHeight-500)this.loadGrid();if(this.pg==='search'&&window.innerHeight+window.scrollY>=document.body.offsetHeight-500)this.doSearch(true);t=false})},{passive:true})},
+
+  // Helpers
+  fn(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return String(n)||'0'},
+  timeAgo(ts){const d=Date.now()-ts,m=Math.floor(d/6e4);if(m<1)return'刚刚';if(m<60)return m+'分钟前';const h=Math.floor(m/60);if(h<24)return h+'小时前';const dd=Math.floor(h/24);if(dd<30)return dd+'天前';return Math.floor(dd/30)+'个月前'},
+};
+
+document.addEventListener('DOMContentLoaded',()=>{
+  A.init();A.renderFBar();
+});
+</script>
+</body>
+</html>
